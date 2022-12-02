@@ -19,6 +19,8 @@ function Calendar() {
 export default Calendar;
 
 function Header({ month, year }) {
+  const handleMonth = () => {};
+
   return (
     <View style={S.header}>
       <Ionicons name="chevron-back" size={24} color="black" />
@@ -32,9 +34,11 @@ function Header({ month, year }) {
 //Year,Monty,date
 function Body({ year, month }) {
   const [totalDays, setTotalDays] = useState({});
+
   useEffect(() => {
     getTotalDays(year, month);
   }, [year, month]);
+
   const getTotalDays = (year, month) => {
     const previousMonthLastDate = new Date(year, month - 1, 0).getDate(); //이 전달의 마지막 날짜 체크
     const previousMonthLastDay = new Date(year, month - 1, 0).getDay(); //이 전 달의 마지막 날짜의 요일
@@ -60,35 +64,40 @@ function Body({ year, month }) {
     });
   };
 
-  //즉 뒷날이 있으려면 currentMonthLastDay가 6이 아니어야함
-  //전날이 있으려면 previousMonthLastDay가 6이 아니어야함
-  // console.log(totalDays);
   return (
     <View style={S.body}>
-      <View style={S.totalDays}>
+      <View style={S.dayOfWeek}>
         {dayOfWeek.map((el, idx) => (
-          <Text style={dS(el).dayOfWeek} key={idx}>
-            {el}
-          </Text>
-        ))}
-        {totalDays?.prev?.map((el, idx) => (
-          <Text style={S.prev} key={idx}>
-            {el}
-          </Text>
-        ))}
-        {totalDays?.curr?.map((el, idx) => (
-          <Text style={S.curr} key={idx}>
-            {el}
-          </Text>
-        ))}
-        {totalDays?.next?.map((el, idx) => (
-          <Text style={S.next} key={idx}>
-            {el}
-          </Text>
+          <View style={S.box}>
+            <Text style={dS(el).dayOfWeek} key={idx}>
+              {el}
+            </Text>
+          </View>
         ))}
       </View>
-      <View style={S.totalDays}></View>
-      <View></View>
+      <View style={S.totalDays}>
+        {totalDays?.prev?.map((el, idx) => (
+          <View style={S.box}>
+            <Text style={S.prev} key={idx}>
+              {el}
+            </Text>
+          </View>
+        ))}
+        {totalDays?.curr?.map((el, idx) => (
+          <View style={S.box}>
+            <Text style={S.curr} key={idx}>
+              {el}
+            </Text>
+          </View>
+        ))}
+        {totalDays?.next?.map((el, idx) => (
+          <View style={S.box}>
+            <Text style={S.next} key={idx}>
+              {el}
+            </Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -109,25 +118,35 @@ const S = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  body: {
+    // flexDirection: "row",
+    // flexWrap: "wrap",
+  },
+  dayOfWeek: {
+    flexDirection: "row",
+    paddingVertical: 8,
+  },
   totalDays: {
     flexDirection: "row",
-    padding: 8,
     flexWrap: "wrap",
+  },
+  box: {
+    width: "14.2%",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 16,
   },
   prev: {
     color: "gray",
     fontSize: 16,
-    width: "14.2%",
   },
   next: {
     color: "gray",
     fontSize: 16,
-    width: "14.2%",
   },
   curr: {
     color: "black",
     fontSize: 16,
-    width: "14.2%",
   },
 });
 const dS = (el) =>
@@ -135,6 +154,5 @@ const dS = (el) =>
     dayOfWeek: {
       color: el === "Sun" ? "red" : el === "Sat" ? "blue" : "gray",
       fontSize: 16,
-      width: "14.2%",
     },
   });
