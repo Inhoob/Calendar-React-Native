@@ -1,6 +1,7 @@
 import { StyleSheet, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
+import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
 function Calendar() {
   const DATE = new Date();
   const YEAR = DATE.getFullYear();
@@ -9,32 +10,70 @@ function Calendar() {
   const [month, setMonth] = useState(MONTH);
   const [year, setYear] = useState(YEAR);
 
+  const moveToNextMonth = (month) => {
+    if (month === 12) {
+      setYear(year + 1);
+      setMonth(1);
+      return { year: year + 1, month: 1 };
+    } else {
+      setMonth(month + 1);
+      return { year: year, month: month + 1 };
+    }
+  };
+
+  const moveToPreviousMonth = (month) => {
+    if (month === 1) {
+      setYear(year - 1);
+      setMonth(12);
+    } else {
+      setMonth(month - 1);
+    }
+  };
+
   return (
     <View style={S.calendarContainer}>
-      <Header month={month} year={year} />
-      <Body month={month} year={year} />
+      <Header
+        month={month}
+        year={year}
+        moveToNextMonth={moveToNextMonth}
+        moveToPreviousMonth={moveToPreviousMonth}
+      />
+      <Body
+        month={month}
+        year={year}
+        moveToNextMonth={moveToNextMonth}
+        moveToPreviousMonth={moveToPreviousMonth}
+      />
     </View>
   );
 }
 export default Calendar;
 
-function Header({ month, year }) {
-  const handleMonth = () => {};
-
+function Header(props) {
   return (
     <View style={S.header}>
-      <Ionicons name="chevron-back" size={24} color="black" />
+      <Pressable onPress={props.moveToPreviousMonth.bind(this, props.month)}>
+        <Ionicons name="chevron-back" size={24} color="black" />
+      </Pressable>
       <Text>
-        {month}월 {year}
+        {props.month}월 {props.year}
       </Text>
-      <Ionicons name="chevron-forward" size={24} color="black" />
+      <Pressable onPress={props.moveToNextMonth.bind(this, props.month)}>
+        <Ionicons name="chevron-forward" size={24} color="black" />
+      </Pressable>
     </View>
   );
 }
 //Year,Monty,date
-function Body({ year, month }) {
+function Body(props) {
   const [totalDays, setTotalDays] = useState({});
-
+  const [pressed, setPressed] = useState({
+    state: "",
+    year: 0,
+    month: 0,
+    date: 0,
+  });
+  const { year, month } = props;
   useEffect(() => {
     getTotalDays(year, month);
   }, [year, month]);
@@ -56,47 +95,69 @@ function Body({ year, month }) {
     const nextDays = Array.from(
       { length: 6 - currentMonthLastDay },
       (v, i) => i + 1
-    ); //0일때 6, 1일때 5
+    );
     setTotalDays({
-      prev: previousMonthLastDay !== 6 ? previousDays : [],
-      curr: currentDays,
-      next: nextDays,
+      prev: {
+        daysList: previousMonthLastDay !== 6 ? previousDays : [],
+        year: month === 1 ? year - 1 : year,
+        month: month === 1 ? 12 : month - 1,
+      },
+      curr: { daysList: currentDays, year: year, month: month },
+      next: {
+        daysList: nextDays,
+        year: month === 12 ? year + 1 : year,
+        month: month === 12 ? 1 : month + 1,
+      },
     });
   };
 
+  const handlePressDay = (pressedDate) => {
+    setPressed(pressedDate);
+  };
+
   return (
-    <View style={S.body}>
+    <View>
       <View style={S.dayOfWeek}>
-        {dayOfWeek.map((el, idx) => (
+        {dayOfWeek.map((day, idx) => (
           <View style={S.box}>
-            <Text style={dS(el).dayOfWeek} key={idx}>
-              {el}
+            <Text style={dS(day).dayOfWeek} key={idx}>
+              {day}
             </Text>
           </View>
         ))}
       </View>
       <View style={S.totalDays}>
-        {totalDays?.prev?.map((el, idx) => (
-          <View style={S.box}>
-            <Text style={S.prev} key={idx}>
-              {el}
-            </Text>
-          </View>
-        ))}
-        {totalDays?.curr?.map((el, idx) => (
-          <View style={S.box}>
-            <Text style={S.curr} key={idx}>
-              {el}
-            </Text>
-          </View>
-        ))}
-        {totalDays?.next?.map((el, idx) => (
-          <View style={S.box}>
-            <Text style={S.next} key={idx}>
-              {el}
-            </Text>
-          </View>
-        ))}
+        {Object.keys(totalDays).map((el) =>
+          totalDays[el].daysList.map((day, idx) => {
+            const pressedDate = {
+              state: el,
+              year: totalDays[el].year,
+              month: totalDays[el].month,
+              date: day,
+            };
+            return (
+              <View style={S.box}>
+                <Pressable
+                  onPress={handlePressDay.bind(this, pressedDate)}
+                  style={
+                    pressed.date === pressedDate.date &&
+                    pressed.month === pressedDate.month &&
+                    pressed.year === pressedDate.year
+                      ? S.pressedDate
+                      : null
+                  }
+                >
+                  <Text
+                    style={el === "prev" || el === "next" ? S.prev : S.curr}
+                    key={`${el}-${idx}`}
+                  >
+                    {day}
+                  </Text>
+                </Pressable>
+              </View>
+            );
+          })
+        )}
       </View>
     </View>
   );
@@ -107,7 +168,7 @@ const dayOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const S = StyleSheet.create({
   calendarContainer: {
     width: "100%",
-    height: "60%",
+    minHeight: "50%",
     borderBottomColor: "black",
     backgroundColor: "#fff",
     paddingHorizontal: 16,
@@ -118,13 +179,8 @@ const S = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  body: {
-    // flexDirection: "row",
-    // flexWrap: "wrap",
-  },
   dayOfWeek: {
     flexDirection: "row",
-    paddingVertical: 8,
   },
   totalDays: {
     flexDirection: "row",
@@ -147,6 +203,15 @@ const S = StyleSheet.create({
   curr: {
     color: "black",
     fontSize: 16,
+  },
+  pressedDate: {
+    width: 30,
+    height: 30,
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 const dS = (el) =>
