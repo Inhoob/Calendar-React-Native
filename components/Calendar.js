@@ -2,32 +2,41 @@ import { StyleSheet, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
+import { v4 as uuidv4 } from "uuid";
+import isSameObj from "../utils/isSameObj";
+import SelectYearModal from "./Modal/SelectYearModal";
+import SelectMonthModal from "./Modal/SelectMonthModal";
 function Calendar() {
   const DATE = new Date();
   const YEAR = DATE.getFullYear();
   const MONTH = DATE.getMonth() + 1;
+  const DAY = DATE.getDate();
+  const today = { year: YEAR, month: MONTH, date: DAY };
 
   const [month, setMonth] = useState(MONTH);
   const [year, setYear] = useState(YEAR);
-
+  const [date, setDate] = useState(DAY);
   const moveToNextMonth = (month) => {
     if (month === 12) {
-      setYear(year + 1);
+      setYear((previousYear) => previousYear + 1);
       setMonth(1);
-      return { year: year + 1, month: 1 };
     } else {
-      setMonth(month + 1);
-      return { year: year, month: month + 1 };
+      setMonth((previousMonth) => previousMonth + 1);
     }
   };
 
   const moveToPreviousMonth = (month) => {
     if (month === 1) {
-      setYear(year - 1);
+      setYear((previousYear) => previousYear - 1);
       setMonth(12);
     } else {
-      setMonth(month - 1);
+      setMonth((previousMonth) => previousMonth - 1);
     }
+  };
+
+  const moveToSpecificYearAndMonth = (year, month) => {
+    setYear(year);
+    setMonth(month);
   };
 
   return (
@@ -37,12 +46,16 @@ function Calendar() {
         year={year}
         moveToNextMonth={moveToNextMonth}
         moveToPreviousMonth={moveToPreviousMonth}
+        moveToSpecificYearAndMonth={moveToSpecificYearAndMonth}
       />
       <Body
         month={month}
         year={year}
+        today={today}
+        date={date}
         moveToNextMonth={moveToNextMonth}
         moveToPreviousMonth={moveToPreviousMonth}
+        moveToSpecificYearAndMonth={moveToSpecificYearAndMonth}
       />
     </View>
   );
@@ -50,33 +63,61 @@ function Calendar() {
 export default Calendar;
 
 function Header(props) {
+  const [yearModalVisible, setYearModalVisible] = useState(false);
+  const [monthModalVisible, setMonthModalVisible] = useState(false);
   return (
-    <View style={S.header}>
-      <Pressable onPress={props.moveToPreviousMonth.bind(this, props.month)}>
-        <Ionicons name="chevron-back" size={24} color="black" />
-      </Pressable>
-      <Text>
-        {props.month}월 {props.year}
-      </Text>
-      <Pressable onPress={props.moveToNextMonth.bind(this, props.month)}>
-        <Ionicons name="chevron-forward" size={24} color="black" />
-      </Pressable>
-    </View>
+    <>
+      <View style={S.header}>
+        <Pressable
+          onPress={props.moveToPreviousMonth.bind(this, props.month)}
+          style={({ pressed }) => pressed && S.pressed}
+        >
+          <Ionicons name="chevron-back" size={24} color="black" />
+        </Pressable>
+        <View style={{ flexDirection: "row" }}>
+          <Pressable onPress={setMonthModalVisible.bind(this, true)}>
+            <Text>{props.month}월 </Text>
+          </Pressable>
+          <Pressable onPress={setYearModalVisible.bind(this, true)}>
+            <Text>{props.year}</Text>
+          </Pressable>
+        </View>
+        <Pressable
+          onPress={props.moveToNextMonth.bind(this, props.month)}
+          style={({ pressed }) => pressed && S.pressed}
+        >
+          <Ionicons name="chevron-forward" size={24} color="black" />
+        </Pressable>
+      </View>
+      <SelectMonthModal
+        year={props.year}
+        modalVisible={monthModalVisible}
+        setModalVisible={setMonthModalVisible}
+        moveToSpecificYearAndMonth={props.moveToSpecificYearAndMonth}
+      />
+      <SelectYearModal
+        month={props.month}
+        year={props.year}
+        modalVisible={yearModalVisible}
+        setModalVisible={setYearModalVisible}
+        moveToSpecificYearAndMonth={props.moveToSpecificYearAndMonth}
+      />
+    </>
   );
 }
 //Year,Monty,date
 function Body(props) {
   const [totalDays, setTotalDays] = useState({});
-  const [pressed, setPressed] = useState({
+  const [pressedDate, setPressedDate] = useState({
     state: "",
     year: 0,
     month: 0,
     date: 0,
   });
-  const { year, month } = props;
+  const { year, month, date } = props;
   useEffect(() => {
     getTotalDays(year, month);
-  }, [year, month]);
+  }, [year, month, date]);
 
   const getTotalDays = (year, month) => {
     const previousMonthLastDate = new Date(year, month - 1, 0).getDate(); //이 전달의 마지막 날짜 체크
@@ -112,44 +153,58 @@ function Body(props) {
   };
 
   const handlePressDay = (pressedDate) => {
-    setPressed(pressedDate);
+    setPressedDate(pressedDate);
+    if (pressedDate.state === "prev" || pressedDate.state === "next") {
+      props.moveToSpecificYearAndMonth(pressedDate.year, pressedDate.month);
+    }
   };
-
+  //{({ pressed }) => pressed && styles.pressedItem}
   return (
     <View>
       <View style={S.dayOfWeek}>
         {dayOfWeek.map((day, idx) => (
-          <View style={S.box}>
-            <Text style={dS(day).dayOfWeek} key={idx}>
-              {day}
-            </Text>
+          <View style={S.box} key={idx}>
+            <Text style={changeColorByDay(day).dayOfWeek}>{day}</Text>
           </View>
         ))}
       </View>
       <View style={S.totalDays}>
-        {Object.keys(totalDays).map((el) =>
-          totalDays[el].daysList.map((day, idx) => {
-            const pressedDate = {
-              state: el,
-              year: totalDays[el].year,
-              month: totalDays[el].month,
+        {Object.keys(totalDays).map((state) =>
+          totalDays[state].daysList.map((day) => {
+            const checkPressedDate = {
+              state: state,
+              year: totalDays[state].year,
+              month: totalDays[state].month,
               date: day,
             };
             return (
-              <View style={S.box}>
+              <View style={S.box} key={uuidv4()}>
                 <Pressable
-                  onPress={handlePressDay.bind(this, pressedDate)}
-                  style={
-                    pressed.date === pressedDate.date &&
-                    pressed.month === pressedDate.month &&
-                    pressed.year === pressedDate.year
-                      ? S.pressedDate
-                      : null
-                  }
+                  onPress={handlePressDay.bind(this, checkPressedDate)}
+                  style={({ pressed }) => {
+                    return [
+                      pressedDate.date === checkPressedDate.date &&
+                      pressedDate.month === checkPressedDate.month &&
+                      pressedDate.year === checkPressedDate.year
+                        ? S.pressedDate
+                        : null,
+                      pressed && S.pressed,
+                    ];
+                  }}
                 >
                   <Text
-                    style={el === "prev" || el === "next" ? S.prev : S.curr}
-                    key={`${el}-${idx}`}
+                    style={[
+                      [
+                        isSameObj(
+                          { state: "curr", ...props.today },
+                          checkPressedDate
+                        )
+                          ? S.today
+                          : state === "prev" || state === "next"
+                          ? S.prev
+                          : S.curr,
+                      ],
+                    ]}
                   >
                     {day}
                   </Text>
@@ -174,7 +229,7 @@ const S = StyleSheet.create({
     paddingHorizontal: 16,
   },
   header: {
-    marginTop: 72,
+    marginTop: 60,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -188,36 +243,44 @@ const S = StyleSheet.create({
   },
   box: {
     width: "14.2%",
+    height: 30,
     justifyContent: "center",
     alignItems: "center",
     marginVertical: 16,
   },
   prev: {
     color: "gray",
-    fontSize: 16,
+    fontSize: 24,
   },
   next: {
     color: "gray",
-    fontSize: 16,
+    fontSize: 24,
   },
   curr: {
     color: "black",
-    fontSize: 16,
+    fontSize: 24,
+  },
+  today: {
+    color: "#2196f3",
+    fontSize: 24,
   },
   pressedDate: {
-    width: 30,
-    height: 30,
+    width: 40,
+    height: 40,
     backgroundColor: "white",
     borderWidth: 1,
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
   },
+  pressed: {
+    opacity: 0.3,
+  },
 });
-const dS = (el) =>
+const changeColorByDay = (day) =>
   StyleSheet.create({
     dayOfWeek: {
-      color: el === "Sun" ? "red" : el === "Sat" ? "blue" : "gray",
+      color: day === "Sun" ? "red" : day === "Sat" ? "blue" : "gray",
       fontSize: 16,
     },
   });

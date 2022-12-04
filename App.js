@@ -6,6 +6,8 @@ import CalendarPage from "./screens/CalendarPage";
 import LibraryPage from "./screens/LibraryPage";
 import MyPage from "./screens/MyPage";
 import { Ionicons, Feather } from "@expo/vector-icons";
+import "react-native-get-random-values";
+
 export default function App() {
   const Tab = createBottomTabNavigator();
 

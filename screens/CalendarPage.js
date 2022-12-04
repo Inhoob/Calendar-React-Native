@@ -11,7 +11,6 @@ function CalendarPage() {
 const S = StyleSheet.create({
   calendarContainer: {
     flex: 1,
-    alignItems: "center",
   },
 });
 
