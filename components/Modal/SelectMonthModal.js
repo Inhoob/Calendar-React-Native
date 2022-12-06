@@ -1,4 +1,4 @@
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View } from "react-native";
 import BasicButton from "../Button/BasicButton";
 import BasicModal from "./BasicModal";
 

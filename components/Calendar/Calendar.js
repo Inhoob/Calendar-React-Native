@@ -1,7 +1,7 @@
-import { StyleSheet, View, Text } from "react-native";
 import { useState } from "react";
-import Header from "./Header";
+import { StyleSheet, View } from "react-native";
 import Body from "./Body";
+import Header from "./Header";
 
 function Calendar() {
   const DATE = new Date();

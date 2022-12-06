@@ -1,11 +1,10 @@
-import { Animated, StyleSheet, View, Text } from "react-native";
 import { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import GestureRecognizer from "react-native-swipe-gestures";
 import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
 import { v4 as uuidv4 } from "uuid";
-import isSameObj from "../../utils/isSameObj";
 import divideArray from "../../utils/divideArray";
-import GestureRecognizer from "react-native-swipe-gestures";
-import { Swipeable } from "react-native-gesture-handler";
+import isSameObj from "../../utils/isSameObj";
 function Body(props) {
   const [totalDays, setTotalDays] = useState([]);
   const [totalDaysByState, setTotalDaysByState] = useState({});

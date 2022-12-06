@@ -1,9 +1,9 @@
-import { StyleSheet, View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
 import Pressable from "react-native/Libraries/Components/Pressable/Pressable";
-import SelectYearModal from "../Modal/SelectYearModal";
 import SelectMonthModal from "../Modal/SelectMonthModal";
+import SelectYearModal from "../Modal/SelectYearModal";
 
 function Header(props) {
   const [yearModalVisible, setYearModalVisible] = useState(false);

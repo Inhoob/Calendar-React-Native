@@ -1,13 +1,13 @@
-import { StyleSheet, View } from "react-native";
-import { NavigationContainer, TabActions } from "@react-navigation/native";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import HomePage from "./screens/HomePage";
+import { NavigationContainer } from "@react-navigation/native";
+import { StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-get-random-values";
 import CalendarPage from "./screens/CalendarPage";
+import HomePage from "./screens/HomePage";
 import LibraryPage from "./screens/LibraryPage";
 import MyPage from "./screens/MyPage";
-import { Ionicons, Feather } from "@expo/vector-icons";
-import "react-native-get-random-values";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 export default function App() {
   const Tab = createBottomTabNavigator();
 
