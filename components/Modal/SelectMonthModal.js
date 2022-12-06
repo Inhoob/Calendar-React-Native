@@ -31,7 +31,7 @@ function SelectMonthModal({
                 onPress={handlePressYear.bind(
                   this,
                   year,
-                  Number(month.slice(0, 1))
+                  parseInt(month.slice(0, 2))
                 )}
               />
             </View>
