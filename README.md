@@ -9,6 +9,7 @@ npm install
 ```
 npm run start
 ```
+각 레벨별 작성 코드는 branch에서 확인하실 수 있습니다
 
 ## LEVEL 1. 하단 네비게이션 바 작성
 
